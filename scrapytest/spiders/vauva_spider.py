@@ -1,3 +1,4 @@
+from datetime import datetime
 import scrapy
 from pathlib import Path
 import pandas as pd
@@ -35,6 +36,12 @@ class VauvaSpider(scrapy.Spider):
 
     def closed(self, reason):
         df = pd.DataFrame(items, columns = ['Thread', 'Author', 'Comment', 'DateTime'])
-        df.to_csv('Test4.csv', index=True)
+        
+        dt = datetime.now()
+        filename_date_string = dt.strftime("%Y-%m-%d_%H-%M-%S")
+        df.to_csv(f'vauva_scraped_{filename_date_string}.csv', index=True)
+
+
+
 
         
