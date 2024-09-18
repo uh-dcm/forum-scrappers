@@ -23,10 +23,10 @@ class VauvaSpider(scrapy.Spider):
 
         for comment in response.xpath('//div[contains(@class, "comment comment")]'):
             row = {
-                "Thread": response.xpath("//meta[contains(@property, 'og:site_name')]//@content").get(),
+                "thread": response.xpath("//meta[contains(@property, 'og:site_name')]//@content").get(),
                 "Author": comment.xpath(".//article//text()")[1].get(),
-                "Comment": ''.join(comment.xpath('.//div[contains(@class, "content my")]/*').getall()),
-                "DateTime": ''.join(comment.xpath(".//div[contains(@class, 'flex justify-end')]/div//text()").getall())
+                "body": ''.join(comment.xpath('.//div[contains(@class, "content my")]/*').getall()),
+                "timestamp": datetime.fromisoformat(''.join(comment.xpath(".//div[contains(@class, 'flex justify-end')]/div/time/@datetime").getall())).strftime('%Y-%m-%d %H:%M:%S')
             }
             items.append(row)
         next_page =  response.xpath('//a/span[text()="Seuraava"]/../@href').get()
@@ -35,7 +35,7 @@ class VauvaSpider(scrapy.Spider):
             yield scrapy.Request(next_page, callback=self.parse_thread)
 
     def closed(self, reason):
-        df = pd.DataFrame(items, columns = ['Thread', 'Author', 'Comment', 'DateTime'])
+        df = pd.DataFrame(items, columns = ['thread', 'author', 'body', 'timestamp'])
         
         dt = datetime.now()
         filename_date_string = dt.strftime("%Y-%m-%d_%H-%M-%S")
