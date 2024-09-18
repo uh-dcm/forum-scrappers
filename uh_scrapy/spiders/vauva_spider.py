@@ -39,7 +39,7 @@ class VauvaSpider(scrapy.Spider):
         
         dt = datetime.now()
         filename_date_string = dt.strftime("%Y-%m-%d_%H-%M-%S")
-        df.to_csv(f'vauva_scraped_{filename_date_string}.csv', index=True)
+        df.to_csv(f'scrapedcontent/vauva_scraped_{filename_date_string}.csv', index=True)
 
 
 

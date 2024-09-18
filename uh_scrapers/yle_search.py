@@ -5,9 +5,12 @@ import requests
 import pandas as pd
 
 
+
+
+
 def get_input(allowed_list):
     while True:
-        searchconstruct = input()
+        searchconstruct = input("->")
         if searchconstruct in allowed_list:
             return allowed_list[searchconstruct], searchconstruct
         else:
@@ -23,7 +26,7 @@ def yle_search_by_query():
 
 
 
-    times = {'tänään' : 'time=today', 'viikko': 'time=week', 'kuukausi' : 'time=month', 'anytime': '' }         
+    times = {'tanaan' : 'time=today', 'viikko': 'time=week', 'kuukausi' : 'time=month', 'anytime': '' }         
     print('Choose time period:\n' + "\n".join(times) + "\n")
     url.append(get_input(times))
     
@@ -36,7 +39,7 @@ def yle_search_by_query():
     
     print('Input search query:')
     queryurl="query="
-    query=input()
+    query=input("->")
     url.append((queryurl + query.replace(" ", "%20"), query))
     filename = [entry[1] for entry in url]
     filename = f'category={filename[0]}&time={filename[1]}&lang={filename[2]}&searchquery={filename[3]}'
@@ -44,20 +47,36 @@ def yle_search_by_query():
     url = "&".join(url)
     collect_threads(url, filename)
 
-
-def collect_threads(url, filename):
+#Collect threads for comment scraping from search construct
+def collect_threads(searchstr, filename):
     app_id = 'hakuylefi_v2_prod'
     app_key = '4c1422b466ee676e03c4ba9866c0921f'
-    nresults= '100'
-    url = f'https://yle-fi-search.api.yle.fi/v1/search?app_id={app_id}&app_key={app_key}&limit={nresults}&offset=0&{url}'
-    print(url)
+    nresults= 10
+    offset = 0
+    url = f'https://yle-fi-search.api.yle.fi/v1/search?app_id={app_id}&app_key={app_key}&limit={nresults}&offset={offset}&type=article&{searchstr}'
     data = requests.get(url)
     data = data.json()
+    print(data)
+    count = data['meta']['count']
     comment_data = []
     for entry in data['data']:
         comments = collect_comments(entry['id'])
         if 'notifications' not in comments:
             comment_data.extend(comments)
+
+    while offset+nresults < count:
+        offset = offset + nresults
+        print("offset: ")
+        print(offset)
+        print("count: ")
+        print(count)
+        url = f'https://yle-fi-search.api.yle.fi/v1/search?app_id={app_id}&app_key={app_key}&limit={nresults}&offset={offset}&type=article&{searchstr}'
+        data = requests.get(url)
+        data = data.json()
+        for entry in data['data']:
+            comments = collect_comments(entry['id'])
+            if 'notifications' not in comments:
+                comment_data.extend(comments)
 
 
     dt = datetime.now()
@@ -67,7 +86,7 @@ def collect_threads(url, filename):
 
 
 
-#Collect individual comments
+#Collect individual comments from a thread
 def collect_comments( id ):
     app_key = 'sfYZJtStqjcANSKMpSN5VIaIUwwcBB6D'
     app_id = 'yle-comments-plugin'
