@@ -27,7 +27,7 @@ while True:
 print("------")
 #Vauva scrape code using their search function
 if domain == 'vauva.fi':
-        print("Input search term to find articles:\n")
+        print("Input search term to find threads:\n")
         key = input()
         process.crawl("vauva", start_urls = [f'https://www.vauva.fi/haku?keys={key}&sort&searchpage'])
         process.start() 
