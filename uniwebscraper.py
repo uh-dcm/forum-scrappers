@@ -1,11 +1,11 @@
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
-import uh_scrapers.yle_search
+import scrapers
 
 process = CrawlerProcess(get_project_settings())
 
 #All currently supported domains
-allowed_domains = ['vauva.fi', 'yle.fi']
+allowed_domains = ['vauva.fi', 'yle.fi', 'hs.fi']
 
 
 def get_input(allowed_list):
@@ -34,7 +34,11 @@ if domain == 'vauva.fi':
 
 #Yle scrape code using their search function      
 elif domain == 'yle.fi':
-    uh_scrapers.yle_search.yle_search_by_query()
+    scraper = scrapers.YleScraper()
+    scraper.scrape()
+elif domain == 'hs.fi':
+    scraper = scrapers.HSScraper()
+    scraper.scrape()
 
 
 
