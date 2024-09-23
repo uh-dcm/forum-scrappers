@@ -3,9 +3,11 @@
     Pull the repository
 
     Install requirements from requirements.txt by running
+
     ``` 
     pip install -r requirements.txt
     ``` 
+    
     from the prject directory.
 
     Run uniwebscraper.py and follow the prompts.
@@ -13,7 +15,6 @@
 ## Curent task:
  - Start on a scraper for iltalehti
  - Start implementing unit testing for created scrapers
-
 ## Progress so far:
 - NEW: Wrote a scraper for hs.fi that uses their search to find articles and scrapes them for comments.
 - NEW: Wrapped yle scraper into class for ease of use and readability
@@ -24,7 +25,7 @@
 
 ## Issues/Tweaks
 ### Ongoing
-- implement custom
+- implement custom timeperiods for yle and hs scrapers
 ### Fixed
 - fix error on returning no comments for a search in yle.fi
 - wrap the yle scraper into classes for ease of integration
