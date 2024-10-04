@@ -8,6 +8,45 @@ process = CrawlerProcess(get_project_settings())
 
 #All currently supported domains
 
+class Search:
+    
+    def __init__(self, search_params, search_query, body=None, thread_limit = None, comm_limit=None) -> None:
+        self.search_params = search_params
+        self.body = body if body is not None else []
+        self.search_query = search_query if search_query is not None else self.set_search_query()
+        self.thread_limit = thread_limit
+        self.comm_limit = comm_limit
+
+    def choose(self, param_dict, choice_message=None):
+        if choice_message is not None:   
+            print('') 
+            print(choice_message)
+        else:
+            print("Choose from:")
+        for n, item in enumerate(param_dict):
+            print(f'{n+1}.{item}')
+        print('')
+        while True:
+            choice = input("->")
+            if choice in str(param_dict):
+                return (param_dict[choice], choice)
+            else:
+                print("Not a valid input, try again")
+        
+
+    def fill(self):
+        self.body = []
+        for param in self.search_params:
+            self.body.append(self.choose(param))
+    
+    def set_search_query(self):
+        self.search_query = input("\nType your search query:\n->")
+
+    
+    def format_search_query(self):
+        formatted_query = self.search_query.replace(" ", "%20")
+        return formatted_query
+
 
 class uhWebScraperUI:
      
