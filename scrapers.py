@@ -4,24 +4,83 @@ import requests
 import pandas as pd
 import logging
 import time
+import constants
+
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+
+class Search:
+    
+    def __init__(self, fields, search_query, body=None, thread_limit = None, com_limit=None) -> None:
+        self.fields = fields
+        if body is not None:
+            self.body = body
+        else:
+            self.body = []
+            self.fill()
+        if search_query is not None:
+            self.search_query = search_query
+        else: self.search_query= self.get_search_query()
+        self.thread_limit = thread_limit
+        self.com_limit = com_limit
+
+    def choose(self, list, choice_message=None):
+        if choice_message is not None:   
+            print('') 
+            print(choice_message)
+        else:
+            print("Choose from:")
+        for n, item in enumerate(list):
+            print(f'{n+1}.{item}')
+        print('')
+        while True:
+            choice = input("->")
+            if choice in str(list):
+                return list[choice], choice
+            else:
+                break
+        
+
+
+    def fill(self):
+        for field in self.fields:
+            self.body.append(self.choose(field))
+    
+    def get_search_query(self):
+        key = input("\nType your search query:\n->")
+        return key
+    
+    def format_search_query(self):
+        formatted_query = self.search_query.replace(" ", "%20")
+        return formatted_query
+    
+
+    
+
+    
+
+
+        
+
+
 
 class Scraper:
 
     def __init__(self):
-        self.query = None
+        self.search_parameters = []
 
 
     # Final function to call
-    def scrape(self):
-        if self.query is None:
-            self.query = self.get_query()
-        thread_ids = self.collect_threads(self.query)
+    def scrape(self, query = None):
+        if query is None:
+            query = self.get_query()
+
+        thread_ids = self.collect_threads(query)
         comments = self.scrape_threads(thread_ids)
         if comments is not None:
             print(f'You have scraped {len(thread_ids)} threads for {len(comments)} comments')
             Y_N = input("Would you like to save the results to a csv? (Y/N):\n->")
             if Y_N == "Y":
-                filename = self.make_filename(self.query)
+                filename = self.make_filename(query)
                 self.to_4cat_csv(comments, filename)
                 print("Thank you for using ScraperAirlines, please come again!")
             else:
@@ -35,6 +94,8 @@ class Scraper:
         if choice_message is not None:   
             print('') 
             print(choice_message)
+        else:
+            print("Choose from:")
         for n, item in enumerate(list):
             print(f'{n+1}.{item}')
         print('')
@@ -94,12 +155,9 @@ class HSScraper(Scraper):
     def __init__(self):
         super().__init__()
         self.domain = 'hs.fi'
-        self.times = {'whenever': 'whenever', 'today' : 'today', 'week':'week', 'month':'month'}
-        self.categories = {'kaikki':'kaikki','autot':'autot','espoo':'espoo','helsinki':'helsinki',
-                           'visio':'visio','hsytimessa':'hstimess%C3%A4', 'hsio':'hsio','kirjaarviot':'kirjaarviot',
-                           'kolumnit':'kolumnit','koti':'koti', 'kultturi':'kultturi','kuukausiliite':'kuukauisiliite',
-                           'lastenuutiset':'lastenuutiset','lifestyle':'lifestyle','maailma':'maailma','mielipide':'mielipide'}
-        self.sorting = {'old-to-new':'old','new-to-old':'new','relevant':'rel'}
+        self.times = constants.HS_TIMES
+        self.categories = constants.HS_CATEGORIES
+        self.sorting = constants.HS_SORTING
 
 
 
@@ -140,10 +198,6 @@ class HSScraper(Scraper):
                         thread_ids.append(item['id'])
             offset = offset + count
         return thread_ids
-    
-
-    def scrape_threads(self, thread_ids):
-        return super().scrape_threads(thread_ids)
         
     
     def scrape_thread(self, id):
