@@ -25,10 +25,9 @@ class YleSpider(scrapy.Spider):
         return searchstr
     
     
-    def query_to_url(self, query, offset=0, count =50):
+    def query_to_url(self, count, offset):
         app_id = 'hakuylefi_v2_prod'
         app_key = '4c1422b466ee676e03c4ba9866c0921f'
-        searchstr= [valid[0] for valid in query if valid[0] != '']
         searchstr = "&".join(searchstr)
         APIurl = f'https://yle-fi-search.api.yle.fi/v1/search?app_id={app_id}&app_key={app_key}&limit={count}&offset={offset}&type=article&{searchstr}'
         return APIurl
