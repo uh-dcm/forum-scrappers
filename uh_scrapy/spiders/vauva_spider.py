@@ -7,6 +7,14 @@ items = []
 class VauvaSpider(scrapy.Spider):
 
     name = "vauva"
+
+    def __init__(self, search, *args, **kwargs):
+        super(VauvaSpider, self).__init__(*args, **kwargs)
+        self.search = search
+        print(search)
+        self.count = 50
+        self.offset = 0
+        self.limit = 100
     
     def parse(self, response):
         for thread in response.xpath("//a[contains(@href, 'replies')]/@href").getall():
