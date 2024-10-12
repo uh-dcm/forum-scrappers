@@ -10,12 +10,14 @@
     
     from the prject directory.
 
-    Run uniwebscraper.py and follow the prompts.
+    Run uniwebscraper.py.
 
 ## Curent task:
- - Start on a scraper for iltalehti
- - Start implementing unit testing for created scrapers
+ - Writing a scraper for kaksplus forums
+ - Designing a scraper builder process
+ -
 ## Progress so far:
+- NEW: Better GUI for useability
 - NEW: Wrote a scraper for hs.fi that uses their search to find articles and scrapes them for comments.
 - NEW: Wrapped yle scraper into class for ease of use and readability
 

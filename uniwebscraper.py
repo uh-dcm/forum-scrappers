@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import ttk
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
-import scrapers
 import constants
 
 print([a for a in constants.YLE_CATEGORIES])
@@ -77,7 +76,7 @@ class ScraperApp:
         self.language_label = tk.Label(self.additional_fields_frame, text="Language:")
         self.language_label.pack(pady=5)
         self.language_var = tk.StringVar()
-        self.language_combobox = ttk.Combobox(self.additional_fields_frame, textvariable=self.time_var, values=[key for key in constants.YLE_LANGUAGE])
+        self.language_combobox = ttk.Combobox(self.additional_fields_frame, textvariable=self.language_var, values=[key for key in constants.YLE_LANGUAGE])
         self.language_combobox.pack(pady=5)
 
 
@@ -116,8 +115,8 @@ class ScraperApp:
             elif domain == 'yle.fi':
                 category = self.category_var.get()
                 time = self.time_var.get()
-                language = self.language_var()
-                search = [query, category, time, language]
+                language = self.language_var.get()
+                search = {"query" : query, "category" : category, "time" : time, "language" : language}
                 process.crawl("yle", search)
             elif domain == 'hs.fi':
                 category = self.category_var.get()
