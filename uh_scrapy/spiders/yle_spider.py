@@ -3,6 +3,7 @@ from typing import Iterable
 import scrapy
 from pathlib import Path
 import pandas as pd
+import constants
 
 
 class YleSpider(scrapy.Spider):
@@ -10,69 +11,66 @@ class YleSpider(scrapy.Spider):
     
     def __init__(self, search, *args, **kwargs):
         super(YleSpider, self).__init__(*args, **kwargs)
-        self.search = search
+        self.filename = search
+        query = "query=" + search["query"]
+        category = constants.YLE_CATEGORIES[search["category"]]
+        time = constants.YLE_TIMES[search["time"]]
+        language = constants.YLE_LANGUAGE[search["language"]]
+        self.search = [query, category, time, language]
+
         self.count = 50
         self.offset = 0
         self.limit = 100
 
-    def start_requests(self):
-        return [scrapy.Request(self.query_to_url)]
+        self.comments = []
 
-    
-    def get_search_string(self):
-        oldsearchstr = super().get_search_string()
-        searchstr = ("query=" + oldsearchstr[0], oldsearchstr[1])
-        return searchstr
-    
-    
+    #Function to turn the search parameters into a valid url 
     def query_to_url(self, count, offset):
         app_id = 'hakuylefi_v2_prod'
         app_key = '4c1422b466ee676e03c4ba9866c0921f'
-        searchstr = "&".join(searchstr)
+        searchstr = "&".join(self.search)
         APIurl = f'https://yle-fi-search.api.yle.fi/v1/search?app_id={app_id}&app_key={app_key}&limit={count}&offset={offset}&type=article&{searchstr}'
         return APIurl
-    
 
-    def collect_threads(self, query, offset =0, count = 50, limit=100):
-        thread_ids =[]
-        APIurl = self.query_to_url(query)
-        print(APIurl)
-        data = requests.get(APIurl)
-        data = data.json()
-        print(data)
-        total_count = data['meta']['count']
+    #initial request
+    def start_requests(self):
+        url = self.query_to_url(self.count, self.offset)
+        return [scrapy.Request(url, callback=self.parse)] 
+    
+ 
+    
+    # Function to collect thread ids
+    def parse(self, response):
         
+        data = response.json()
+        total_count = data['meta']['count'] 
         if total_count != 0:
-            thread_ids.extend([entry['id'] for entry in data['data']])
-        while offset+count<total_count:
-            offset = offset + count
-            APIurl = self.query_to_url(query, offset, count)
-            data = requests.get(APIurl)
-            data = data.json()
-            thread_ids.extend([entry['id'] for entry in data['data']])
-        return thread_ids
+            for id in [entry['id'] for entry in data['data']]:
+                app_key = 'sfYZJtStqjcANSKMpSN5VIaIUwwcBB6D'
+                app_id = 'yle-comments-plugin'
+                url = f"https://comments.api.yle.fi/v1/topics/{id}/comments/accepted?app_id={app_id}&app_key={app_key}&parent_limit=100"
+                yield scrapy.Request(url, callback=self.scrape_thread)
+
+        
+        if self.offset+self.count<total_count:
+            self.offset = self.offset + self.count
+            APIurl = self.query_to_url(self.count, self.offset)
+            yield scrapy.Request(APIurl, callback=self.parse)
     
-    def scrape_thread(self, id):
-        comments = []
-        app_key = 'sfYZJtStqjcANSKMpSN5VIaIUwwcBB6D'
-        app_id = 'yle-comments-plugin'
-        url = f"https://comments.api.yle.fi/v1/topics/{id}/comments/accepted?app_id={app_id}&app_key={app_key}&parent_limit=100"
-        data = requests.get( url )
-        data = data.json()
+    def scrape_thread(self, response):
+        data = response.json()
         if 'notifications' not in data:
-            comments = data
-        return comments
+            self.comments.extend(data)
     
-    def make_filename(self, query):
-        argstr = '_'.join([x[1] for x in query])
+    def make_filename(self):
+        argstr = '_'.join(self.filename)
         dt = datetime.now()
         filename_date_string = dt.strftime("%Y-%m-%d_%H-%M-%S")
-        filename = f'scrapedcontent/{self.domain}_{filename_date_string}_{argstr}'
+        filename = f'scrapedcontent/yle.fi_{filename_date_string}_{argstr}'
         return filename
 
     def to_4cat_csv(self, comments , filename):
         df = pd.DataFrame( comments )
-        df.to_csv("scrapedcontent/test")
         newdf = pd.DataFrame()
         newdf['body'] = df['content']
         newdf['author'] = df['author']
@@ -80,4 +78,9 @@ class YleSpider(scrapy.Spider):
         newdf['id'] = df['id']
         newdf['thread'] = df['topicExternalId']
         newdf.to_csv( filename )
+
+    def closed(self, reason):
+        name = self.make_filename()
+        self.to_4cat_csv(self.comments, name)
+
         
