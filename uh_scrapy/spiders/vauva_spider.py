@@ -7,14 +7,6 @@ items = []
 class VauvaSpider(scrapy.Spider):
 
     name = "vauva"
-
-    def __init__(self, search, *args, **kwargs):
-        super(VauvaSpider, self).__init__(*args, **kwargs)
-        self.search = search
-        print(search)
-        self.count = 50
-        self.offset = 0
-        self.limit = 100
     
     def parse(self, response):
         for thread in response.xpath("//a[contains(@href, 'replies')]/@href").getall():
@@ -43,7 +35,7 @@ class VauvaSpider(scrapy.Spider):
             yield scrapy.Request(next_page, callback=self.parse_thread)
 
     def closed(self, reason):
-        df = pd.DataFrame(items, columns = ['thread', 'author', 'body', 'timestamp'])
+        df = pd.DataFrame(items, columns = ['thread', 'Author', 'body', 'timestamp'])
         
         dt = datetime.now()
         filename_date_string = dt.strftime("%Y-%m-%d_%H-%M-%S")

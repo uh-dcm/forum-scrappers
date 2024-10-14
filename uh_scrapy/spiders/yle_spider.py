@@ -12,7 +12,7 @@ class YleSpider(scrapy.Spider):
     def __init__(self, search, *args, **kwargs):
         super(YleSpider, self).__init__(*args, **kwargs)
         self.filename = search
-        query = "query=" + search["query"]
+        query = "query=" + search["query"].replace(" ", "%20")
         category = constants.YLE_CATEGORIES[search["category"]]
         time = constants.YLE_TIMES[search["time"]]
         language = constants.YLE_LANGUAGE[search["language"]]
@@ -28,7 +28,7 @@ class YleSpider(scrapy.Spider):
     def query_to_url(self, count, offset):
         app_id = 'hakuylefi_v2_prod'
         app_key = '4c1422b466ee676e03c4ba9866c0921f'
-        searchstr = "&".join(self.search)
+        searchstr = "&".join([a for a in self.search if a != ""])
         APIurl = f'https://yle-fi-search.api.yle.fi/v1/search?app_id={app_id}&app_key={app_key}&limit={count}&offset={offset}&type=article&{searchstr}'
         return APIurl
 
@@ -56,12 +56,14 @@ class YleSpider(scrapy.Spider):
             self.offset = self.offset + self.count
             APIurl = self.query_to_url(self.count, self.offset)
             yield scrapy.Request(APIurl, callback=self.parse)
-    
+
+    # Function to scrape comments from thread
     def scrape_thread(self, response):
         data = response.json()
         if 'notifications' not in data:
             self.comments.extend(data)
-    
+
+    # Function to make an appropriate filename
     def make_filename(self):
         argstr = '_'.join(self.filename)
         dt = datetime.now()
@@ -69,6 +71,7 @@ class YleSpider(scrapy.Spider):
         filename = f'scrapedcontent/yle.fi_{filename_date_string}_{argstr}'
         return filename
 
+    # Function to save scraped data to csv
     def to_4cat_csv(self, comments , filename):
         df = pd.DataFrame( comments )
         newdf = pd.DataFrame()
@@ -79,6 +82,7 @@ class YleSpider(scrapy.Spider):
         newdf['thread'] = df['topicExternalId']
         newdf.to_csv( filename )
 
+    # Make filename and save data after spider is done
     def closed(self, reason):
         name = self.make_filename()
         self.to_4cat_csv(self.comments, name)
