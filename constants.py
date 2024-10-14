@@ -2,11 +2,14 @@
 # Storing them separately is intended to improve readability
 
 #UI_constants
-ALLOWED_DOMAINS = ['vauva.fi', 'yle.fi', 'hs.fi']
+ALLOWED_DOMAINS = ['vauva.fi', 'yle.fi', 'hs.fi', 'kaksplus.fi']
+
+#Vauva constants
+#Vauva parameters
+
+VAUVA_PARAMETERS = {}
 
 #HS constants
-
-
 ##HS search parameters
 
 HS_TIMES = {'whenever': 'whenever', 'today' : 'today', 'week':'week', 'month':'month'}
@@ -31,6 +34,21 @@ YLE_LANGUAGE = {'suomi': '', 'svenska': 'language=sv', 'english': 'language=en',
 
 YLE_PARAMETERS = {'Publishing time' : YLE_TIMES, 'Category' : YLE_CATEGORIES, 'Language' : YLE_LANGUAGE}
 
+#Kaksplus constants
 #Kaksplus search parameters
+KAKSPLUS_FORUM_SECTIONS = {'Aihe vapaa':'2',
+                           'Lapsen saaminen':'10054',
+                           'Vauvat ja taaperot':'10055',
+                           'Lapset ja teinit':'10056',
+                           'Perhe-elämä':'10057',
+                           'ANNA-Naistentaudit':'10058',
+                           'Seksi':'35',
+                           'Seksinovellit ja ero-tarinat':'48',
+                           'ANNA-Vauvahaavet':'10059',
+                           'ANNA-Odotusaika':'10060',
+                           'ANNA-Vauvan hoito':'10061',
+                           'ANNA-Parisuuhteessa':'10062',
+                           'ANNA-Seksi':'10063'
+                           }
 
 
