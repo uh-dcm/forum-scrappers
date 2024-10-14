@@ -4,7 +4,6 @@ from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 import constants
 
-print([a for a in constants.YLE_CATEGORIES])
 
 class ScraperApp:
     
@@ -55,6 +54,8 @@ class ScraperApp:
             self.yle_fields()
         elif domain == 'hs.fi':
             self.hs_fields()
+        elif domain == 'kaksplus.fi':
+            self.kaksplus_fields()
 
     def vauva_fields(self):
         pass
@@ -100,6 +101,50 @@ class ScraperApp:
         self.sorting_combobox = ttk.Combobox(self.additional_fields_frame, textvariable=self.sorting_var, values=[key for key in constants.HS_SORTING])
         self.sorting_combobox.pack(pady=5)
 
+    def kaksplus_fields(self):
+
+        # Create a checkbox for searching titles only
+        self.title_only_var = tk.BooleanVar()
+        self.title_only_checkbox = tk.Checkbutton(self.additional_fields_frame, text="Search Only in Titles", variable=self.title_only_var)
+        self.title_only_checkbox.pack(pady=5)
+
+        # Create an input field for newer than date
+        self.newer_than_label = tk.Label(self.additional_fields_frame, text="Newer Than (YYYY-MM-DD):")
+        self.newer_than_label.pack(pady=5)
+        self.newer_than_entry = tk.Entry(self.additional_fields_frame, width=50)
+        self.newer_than_entry.pack(pady=5)
+
+        # Create an input field for minimum reply count
+        self.min_reply_count_label = tk.Label(self.additional_fields_frame, text="Minimum Reply Count:")
+        self.min_reply_count_label.pack(pady=5)
+        self.min_reply_count_entry = tk.Entry(self.additional_fields_frame, width=50)
+        self.min_reply_count_entry.pack(pady=5)
+
+        # Create a dropdown for selecting nodes (forum sections)
+        self.nodes_label = tk.Label(self.additional_fields_frame, text="Forum Sections (comma-separated IDs):")
+        self.nodes_label.pack(pady=5)
+        self.nodes_entry_var = tk.StringVar()
+        self.nodes_entry = ttk.Combobox(self.additional_fields_frame, textvariable=self.nodes_entry_var, values = [value for value in constants.KAKSPLUS_FORUM_SECTIONS])
+        self.nodes_entry.pack(pady=5)
+
+        # Create a checkbox for including child nodes
+        self.child_nodes_var = tk.BooleanVar(value=True)  # Default to checked
+        self.child_nodes_checkbox = tk.Checkbutton(self.additional_fields_frame, text="Search Also in Subsections", variable=self.child_nodes_var)
+        self.child_nodes_checkbox.pack(pady=5)
+
+        # Create a dropdown for ordering results
+        self.order_label = tk.Label(self.additional_fields_frame, text="Order By:")
+        self.order_label.pack(pady=5)
+        self.order_var = tk.StringVar()
+        self.order_combobox = ttk.Combobox(self.additional_fields_frame, textvariable=self.order_var, values=["relevance", "date", "replies"])
+        self.order_combobox.pack(pady=5)
+        '''
+        # Create a checkbox for grouping results
+        self.grouped_var = tk.BooleanVar(value=True)  # Default to checked
+        self.grouped_checkbox = tk.Checkbutton(self.additional_fields_frame, text="Show Results as Threads", variable=self.grouped_var)
+        self.grouped_checkbox.pack(pady=5)
+        '''
+
     def start_scraper(self):
         # Get selected domain and search query
         domain = self.domain_var.get()
@@ -124,6 +169,17 @@ class ScraperApp:
                 sorting = self.sorting_var.get()
                 search = [query, category, time, sorting]
                 process.crawl("hs", search)
+            elif domain == 'kaksplus.fi':
+                search = []
+                search.append(query)
+                search.append(self.title_only_var.get())
+                search.append(self.newer_than_entry.get())
+                search.append(self.min_reply_count_entry.get())
+                search.append(constants.KAKSPLUS_FORUM_SECTIONS[self.nodes_entry_var.get()])
+                search.append(self.child_nodes_var.get())
+                search.append(self.order_var.get())
+                process.crawl('kaksplus', search)
+
             else:
                 print("Domain not supported yet.")
             
