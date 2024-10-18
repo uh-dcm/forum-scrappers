@@ -21,11 +21,11 @@ class KaksplusSpider(scrapy.Spider):
         _xfToken = response.css('input[name="_xfToken"]::attr(value)').get()
         formdata = {
             "keywords": self.search[0],  
-            "c[title_only]": self.search[1],  
+            "c[title_only]": '1' if self.search[1] else '0',  
             "c[newer_than]": self.search[2],  
             "c[min_reply_count]": self.search[3],  
             "c[nodes][]": self.search[4],  
-            "c[child_nodes]": self.search[5],  
+            "c[child_nodes]": '1' if self.search[5] else '0',  
             "order": self.search[6],  
             "grouped": '1',    
             "_xfToken": _xfToken,  
@@ -35,6 +35,7 @@ class KaksplusSpider(scrapy.Spider):
         yield FormRequest(
             url='https://keskustelu.kaksplus.fi/keskustelu/haku/search',
             formdata=formdata,
+            method='POST',
             callback=self.parse_threads
         )
 
@@ -54,7 +55,7 @@ class KaksplusSpider(scrapy.Spider):
         thread = response.xpath('//html/@data-content-key').get()[7:]
         
          
-        for comment in response.xpath('//article[contains(@class, "message--post")]').getall():
+        for comment in response.xpath('//article[contains(@class, "message--post")]'):
             body = comment.xpath('.//div[@class="bbWrapper"]/text()').getall()
             row = {
                 "thread": thread,
@@ -65,7 +66,6 @@ class KaksplusSpider(scrapy.Spider):
             }
             self.items.append(row)
         next_page =  response.xpath('//a[@class="pageNav-jump pageNav-jump--next"]/@href').get()
-
         if next_page is not None:
             next_page = response.urljoin(next_page)
             yield scrapy.Request(next_page, callback=self.scrape_thread)
