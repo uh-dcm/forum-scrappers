@@ -18,9 +18,10 @@
 - implement custom timeperiods for yle and hs scrapers
 
 ## Ongoing tasks:
- - Writing a scraper for kaksplus forums
+ - making scraper for ylilauta.org
  - Designing a scraper builder process
 ## Progress so far:
+- Kaksplus scraper ready
 - Reimplemented yle in scrapy
 - Better GUI for useability
 - Wrote a scraper for hs.fi that uses their search to find articles and scrapes them for comments.
