@@ -19,7 +19,7 @@
 
 ## Ongoing tasks:
  - making scraper for ylilauta.org
- - Designing a scraper builder process
+ - Designing a scraper builder process(the file is a failed idea atm)
 ## Progress so far:
 - Kaksplus scraper ready
 - Reimplemented yle in scrapy
