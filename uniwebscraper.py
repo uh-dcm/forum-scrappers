@@ -171,13 +171,13 @@ class ScraperApp:
                 process.crawl("hs", search)
             elif domain == 'kaksplus.fi':
                 search = []
-                search.append(query)
-                search.append(self.title_only_var.get())
-                search.append(self.newer_than_entry.get())
-                search.append(self.min_reply_count_entry.get())
-                search.append(constants.KAKSPLUS_FORUM_SECTIONS[self.nodes_entry_var.get()])
-                search.append(self.child_nodes_var.get())
-                search.append(self.order_var.get())
+                search.append(str(query))
+                search.append(str(self.title_only_var.get()))
+                search.append(str(self.newer_than_entry.get()))
+                search.append(str(self.min_reply_count_entry.get()))
+                search.append(str(constants.KAKSPLUS_FORUM_SECTIONS[self.nodes_entry_var.get()]))
+                search.append(str(self.child_nodes_var.get()))
+                search.append(str(self.order_var.get()))
                 process.crawl('kaksplus', search)
 
             else:
