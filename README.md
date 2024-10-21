@@ -14,13 +14,15 @@
 
 ## Issues/Tweaks
 ### Ongoing
-- kaksplus scraper is not scraping for mysterious reasons, working on it
-- implement custom timeperiods for yle and hs scrapers
-
 ## Ongoing tasks:
+
  - making scraper for ylilauta.org
  - Designing a scraper builder process(the file is a failed idea atm)
+
 ## Progress so far:
+
+- custom timeperiods are supported for hs and yle and kaksplus
+- Rimplemeted hs in scrapy
 - Kaksplus scraper ready
 - Reimplemented yle in scrapy
 - Better GUI for useability
