@@ -14,9 +14,10 @@ class YleSpider(scrapy.Spider):
         self.filename = search
         query = "query=" + search["query"].replace(" ", "%20")
         category = constants.YLE_CATEGORIES[search["category"]]
-        time = constants.YLE_TIMES[search["time"]]
+        timeFrom = "timeFrom=" + search["timeFrom"]
+        timeTo = "timeTo=" + search["timeTo"]
         language = constants.YLE_LANGUAGE[search["language"]]
-        self.search = [query, category, time, language]
+        self.search = [query, category, timeFrom, timeTo , language]
 
         self.count = 50
         self.offset = 0
@@ -29,7 +30,7 @@ class YleSpider(scrapy.Spider):
         app_id = 'hakuylefi_v2_prod'
         app_key = '4c1422b466ee676e03c4ba9866c0921f'
         searchstr = "&".join([a for a in self.search if a != ""])
-        APIurl = f'https://yle-fi-search.api.yle.fi/v1/search?app_id={app_id}&app_key={app_key}&limit={count}&offset={offset}&type=article&{searchstr}'
+        APIurl = f'https://yle-fi-search.api.yle.fi/v1/search?app_id={app_id}&app_key={app_key}&limit={count}&offset={offset}&type=article&{searchstr}&time=custom'
         return APIurl
 
     #initial request
