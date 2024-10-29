@@ -15,12 +15,11 @@
 ## Issues/Tweaks
 ### Ongoing
 ## Ongoing tasks:
- - polish kauppalehti spider, there are some bugs
  - making scraper for ylilauta.org
- - Designing a scraper builder process(the file is a failed idea atm)
+ - Designing a scraper builder app
 
 ## Progress so far:
-
+- Kauppalehti spider is finished
 - custom timeperiods are supported for hs and yle and kaksplus
 - Rimplemeted hs in scrapy
 - Kaksplus scraper ready
