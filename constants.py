@@ -2,7 +2,7 @@
 # Storing them separately is intended to improve readability
 
 #UI_constants
-ALLOWED_DOMAINS = ['vauva.fi', 'yle.fi', 'hs.fi', 'kaksplus.fi']
+ALLOWED_DOMAINS = ['vauva.fi', 'yle.fi', 'hs.fi', 'kaksplus.fi', 'kauppalehti.fi']
 
 #Vauva constants
 #Vauva parameters
@@ -50,5 +50,35 @@ KAKSPLUS_FORUM_SECTIONS = {'Aihe vapaa':'2',
                            'ANNA-Parisuuhteessa':'10062',
                            'ANNA-Seksi':'10063'
                            }
+
+#Kauppalehti contants
+#Kauppalehti forum sections
+KAUPPALEHTI_FORUM_SECTIONS = {
+    "Kaikki foorumit": "",
+    "Sijoittaminen": "1",
+    "Kotimaiset osakkeet": "5",
+    "Ulkomaiset osakkeet": "2",
+    "Asunnot ja kiinteistöt": "13",
+    "Kryptot": "38",
+    "Aloittelijan palsta": "6",
+    "Rahastot ja ETF:t": "15",
+    "Unelmasalkku": "39",
+    "Yleinen sijoituskeskustelu": "18",
+    "Talous": "3",
+    "Talous ja talouspolitiikka": "8",
+    "Työelämä": "17",
+    "Yrittäminen": "14",
+    "Yhteiskuntapolitiikka": "28",
+    "Lifestyle": "4",
+    "Kahvihuone": "12",
+    "Autot": "20",
+    "Viini ja ruoka": "16",
+    "Tiede ja tekniikka": "19",
+    "Tiedotteet ja palaute": "37",
+    "Tiedotteet": "36",
+    "Kehitysehdotukset ja palaute": "7",
+    "Testipalsta": "10"
+}
+
 
 
