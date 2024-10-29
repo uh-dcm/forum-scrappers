@@ -15,7 +15,7 @@
 ## Issues/Tweaks
 ### Ongoing
 ## Ongoing tasks:
-
+ - polish kauppalehti spider, there are some bugs
  - making scraper for ylilauta.org
  - Designing a scraper builder process(the file is a failed idea atm)
 
