@@ -61,6 +61,8 @@ class ScraperApp:
             self.hs_fields()
         elif domain == 'kaksplus.fi':
             self.kaksplus_fields()
+        elif domain == 'kauppalehti.fi':
+            self.kauppalehti_fields()
 
     def vauva_fields(self):
         pass
@@ -169,6 +171,69 @@ class ScraperApp:
         self.grouped_checkbox.pack(pady=5)
         '''
 
+
+    def kauppalehti_fields(self):
+
+        # Sender input (Lähettäjä)
+        self.users_label = tk.Label(self.additional_fields_frame, text="Lähettäjä (Sender):")
+        self.users_label.pack(pady=5, padx=5)
+        self.users_entry = tk.Entry(self.additional_fields_frame, width=50)
+        self.users_entry.pack(pady=5, padx=5)
+
+        #Title only
+        self.title_only_var = tk.BooleanVar(value=False)
+        self.title_only_checkbox = tk.Checkbutton(self.additional_fields_frame, text="Etsi vain otsikoista (Search Only in Titles)", variable=self.title_only_var)
+        self.title_only_checkbox.pack(pady=5, padx=5)
+
+        # Newer than date input
+        self.newer_than_label = tk.Label(self.additional_fields_frame, text="Uudempi kuin (Newer Than, YYYY-MM-DD):")
+        self.newer_than_label.pack(pady=5, padx=5)
+        self.newer_than_var = tk.StringVar(value="")
+        self.newer_than_entry = DateEntry(self.additional_fields_frame, textvariable=self.newer_than_var, date_pattern="y-mm-dd")
+        self.newer_than_entry.pack(pady=5, padx=5)
+
+        # Older than date input
+        self.older_than_label = tk.Label(self.additional_fields_frame, text="Vanhempi kuin (Older Than, YYYY-MM-DD):")
+        self.older_than_label.pack(pady=5, padx=5)
+        self.older_than_var = tk.StringVar(value="")
+        self.older_than_entry = DateEntry(self.additional_fields_frame, textvariable=self.older_than_var, date_pattern="y-mm-dd")
+        self.older_than_entry.pack(pady=5, padx=5)
+
+        # Minimum reply count input
+        self.min_reply_count_label = tk.Label(self.additional_fields_frame, text="Vähintään vastauksia (Minimum Reply Count):")
+        self.min_reply_count_label.pack(pady=5, padx=5)
+        self.min_reply_count_entry = tk.Entry(self.additional_fields_frame, width=50)
+        self.min_reply_count_entry.pack(pady=5, padx=5)
+
+        # Dropdown for forum sections (nodes)
+        self.nodes_label = tk.Label(self.additional_fields_frame, text="Foorumiosiot (Forum Sections):")
+        self.nodes_label.pack(pady=5, padx=5)
+        self.nodes_entry_var = tk.StringVar(value='Kaikki foorumit')
+        self.nodes_entry = ttk.Combobox(
+            self.additional_fields_frame,
+            textvariable=self.nodes_entry_var,
+            values=[value for value in constants.KAUPPALEHTI_FORUM_SECTIONS],
+            width=50
+        )
+        self.nodes_entry.pack(pady=5, padx=5)
+
+        # Checkbox for including child nodes
+        self.child_nodes_var = tk.BooleanVar(value=True)  # Default to checked
+        self.child_nodes_checkbox = tk.Checkbutton(self.additional_fields_frame, text="Hae myös alafoorumeista (Include Subsections)", variable=self.child_nodes_var)
+        self.child_nodes_checkbox.pack(pady=5, padx=5)
+
+        # Order by dropdown
+        self.order_label = tk.Label(self.additional_fields_frame, text="Järjestys (Order By):")
+        self.order_label.pack(pady=5, padx=5)
+        self.order_var = tk.StringVar(value='relevance')
+        self.order_combobox = ttk.Combobox(
+            self.additional_fields_frame,
+            textvariable=self.order_var,
+            values=["relevance", "date", "replies"],
+            width=50
+        )
+        self.order_combobox.pack(pady=5, padx=5)
+
     def start_scraper(self):
         # Get selected domain and search query
         domain = self.domain_var.get()
@@ -206,6 +271,19 @@ class ScraperApp:
                 search.append(str(self.child_nodes_var.get()))
                 search.append(str(self.order_var.get()))
                 process.crawl('kaksplus', search)
+            elif domain == 'kauppalehti.fi':
+                search = []
+                search.append(str(query))
+                search.append(str(self.title_only_var.get()))
+                search.append(str(self.users_entry.get()))
+                search.append(str(self.newer_than_var.get()))
+                search.append(str(self.older_than_var.get()))
+                search.append(str(self.min_reply_count_entry.get()))
+                search.append(str(self.nodes_entry_var.get()))
+                search.append(str(self.child_nodes_var.get()))
+                search.append(str(self.order_var.get()))
+                process.crawl('kauppalehti', search)    
+
 
             else:
                 print("Domain not supported yet.")
