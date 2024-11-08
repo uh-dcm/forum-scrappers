@@ -80,5 +80,26 @@ KAUPPALEHTI_FORUM_SECTIONS = {
     "Testipalsta": "10"
 }
 
+#Hevostalli constants
+HEVOSTALLI_FORUMS = {
+    'Yleinen keskustelu': 1,
+    'Ratsastus': 2,
+    'Raviurheilu': 3,
+    'Hoitajat kohtaavat': 4,
+    'Tallielämää': 5,
+    'Etsintäkuulutukset': 6,
+    'Nuorten nurkka': 7,
+    'Seniorit': 9,
+    'Leirielämää': 10,
+    'Tarinatuokio': 11,
+    'Virtuaalitallit': 12,
+    'Kyselyt & gallupit': 13,
+    'Palautteet & tiedotus': 14,
+    'Hevoskasvatus': 15,
+    'Ponialue': 16,
+    'Mummola': 18
+}
+
+
 
 
