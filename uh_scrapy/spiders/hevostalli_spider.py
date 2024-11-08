@@ -6,53 +6,48 @@ from scrapy.http import FormRequest
 from ..items import PostItem
 
 items = []
-class KaksplusSpider(scrapy.Spider):
+class HevostalliSpider(scrapy.Spider):
 
-    name = "spooder"
-    start_urls = []
+    name = "hevostalli"
+    start_urls = ['http://forum.hevostalli.net/']
+    custom_settings = {
+        'USER_AGENT': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
+        'LOG_LEVEL': 'DEBUG',
+        'ROBOTSTXT_OBEY': False,  # Temporarily disable robots.txt obeying
+    }
 
-    def __init__(self, search, *args, **kwargs):
-        super(KaksplusSpider, self).__init__(*args, **kwargs)
-        self.search = search
+    def __init__(self, formdata, *args, **kwargs):
+        super(HevostalliSpider, self).__init__(*args, **kwargs)
+        self.formdata = formdata
         self.items = []
 
     
     def parse(self, response):
-        print(response)
-        _xfToken = response.css(fill xpath to xfToken).get()
-        formdata = {
-            #fill formdata here  based on the html
-            #the format is as following:
-            # form_field1 = search[0]
-            # form_field2 = search[0] 
-                    
-                    }
-        yield FormRequest(
-            url= 'fill url here',
-            formdata=formdata,
-            method='POST',
-            callback=self.parse_threads
-        )
+        form = self.formdata
+        url_start  = f'http://forum.hevostalli.net/list.php?f={form["forum"]}'
+        print(url_start)
+        yield scrapy.Request(url_start, callback=self.parse_threads)
+        
 
     def parse_threads(self, response):
-        threads = response.xpath(fill xpath here)getall()
+        print(response)
+        threads = response.xpath('//tr[contains(@class, "dps_row")]')
         for thread in threads:
-            link = thread.xpath(fill xpath here)
+            link = thread.xpath('.//td[contains(@class, "PhorumListRow title")]/a/@href').get()
             url = response.urljoin(link)
-            thread_name = thread.xpath(fill xpath here)
-            yield scrapy.Request(url, callback=self.scrape_thread, meta={'thread': thread_name})
+            print(url)
+            yield scrapy.Request(url, callback=self.scrape_thread)
 
         yield from self.parse_threads_next_page(response)
 
     def parse_threads_next_page(self, response):
-        next_page = response.xpath(fill xpath to next page link).get()
+        next_page = response.xpath("//a[contains(@href, 'a=2')]/@href").get()
         if next_page is not None:
             next_page = response.urljoin(next_page)
             yield scrapy.Request(next_page, callback=self.parse_threads)
 
 
     def scrape_thread(self, response):
-        
         i = 0
         ids= response.xpath(".//a/@name").getall()
         for comment in response.xpath("//td[@class='postbodywrap']"):
@@ -73,37 +68,26 @@ class KaksplusSpider(scrapy.Spider):
             parsed_date = datetime.strptime(pre_time, "%d.%m.%y %H:%M:%S")
             iso_date = parsed_date.strftime("%Y-%m-%dT%H:%M:%S")
             post["timestamp"] = iso_date
-
             yield post
 
-        yield from self.scrape_thread_next_page(response)
 
 
     def scrape_thread_next_page(self, response):
-        next_page =  response.xpath(fill xpath to next page link).get()
-        if next_page is not None:
-            next_page = response.urljoin(next_page)
-            yield scrapy.Request(next_page, callback=self.scrape_thread)
+        pass
 
 
 
    # Function to make an appropriate filename
     def make_filename(self):
-        argstr = '_'.join(self.search)
+        argstr = '_'.join(self.formdata)
         dt = datetime.now()
         filename_date_string = dt.strftime("%Y-%m-%d_%H-%M-%S")
         filename = f'scrapedcontent/kaksplus.fi_{filename_date_string}_{argstr}'
         return filename
 
-    # Function to save scraped data to csv
-    def to_4cat_csv(self, comments , filename):
-        df = pd.DataFrame( comments ) 
-        df.to_csv( filename )
-
     # Make filename and save data after spider is done
     def closed(self, reason):
-        name = self.make_filename()
-        self.to_4cat_csv(self.items, name)
+        pass
 
 
 
