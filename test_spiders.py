@@ -31,4 +31,6 @@ class hevostalliTest(unittest.TestCase):
     def test_parse_threads(self):
         threads = list(self.spider.parse_threads(mock_response_from_file("scrapy_test_html/hevostalli_threads.html", "http://forum.hevostalli.net/list.php?f=1")))
         self.assertEqual(len(threads), 31)
+    def test_parse_threads_next_page(self):
+        link = list(self.spider.parse_threads_next_page(mock_response_from_file("scrapy_test_html/hevostalli_threads.html", "http://forum.hevostalli.net/list.php?f=1")))
     
