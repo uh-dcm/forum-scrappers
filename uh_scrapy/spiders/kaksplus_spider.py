@@ -9,6 +9,17 @@ class KaksplusSpider(scrapy.Spider):
 
     name = "kaksplus"
     start_urls = ['https://keskustelu.kaksplus.fi/keskustelu/haku/']
+    custom_settings = {
+        'USER_AGENT': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
+        'LOG_LEVEL': 'DEBUG',
+        'ROBOTSTXT_OBEY': False,  # Temporarily disable robots.txt obeying
+        'FEEDS':{
+            'data.csv':{
+                'format':'csv'
+            }
+        }
+    }
+
 
     def __init__(self, search, *args, **kwargs):
         super(KaksplusSpider, self).__init__(*args, **kwargs)
@@ -77,7 +88,7 @@ class KaksplusSpider(scrapy.Spider):
         argstr = '_'.join(self.search)
         dt = datetime.now()
         filename_date_string = dt.strftime("%Y-%m-%d_%H-%M-%S")
-        filename = f'scrapedcontent/kaksplus.fi_{filename_date_string}_{argstr}'
+        filename = f'scrapedcontent/kaksplus_{filename_date_string}_{argstr}.csv'
         return filename
 
     # Function to save scraped data to csv

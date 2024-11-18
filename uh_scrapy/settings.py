@@ -6,7 +6,7 @@
 #     https://docs.scrapy.org/en/latest/topics/settings.html
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-
+LOG_LEVEL = 'INFO'
 BOT_NAME = "uh_scrapy"
 
 SPIDER_MODULES = ["uh_scrapy.spiders"]

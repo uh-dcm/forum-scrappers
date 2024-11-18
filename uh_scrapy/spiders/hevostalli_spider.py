@@ -5,10 +5,9 @@ import pandas as pd
 from scrapy.http import FormRequest
 from ..items import PostItem
 
-items = []
 class HevostalliSpider(scrapy.Spider):
 
-    name = "hevostalli"
+    name = 'hevostalli'
     start_urls = ['http://forum.hevostalli.net/']
     custom_settings = {
         'USER_AGENT': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
@@ -25,17 +24,14 @@ class HevostalliSpider(scrapy.Spider):
     def parse(self, response):
         form = self.formdata
         url_start  = f'http://forum.hevostalli.net/list.php?f={form["forum"]}'
-        print(url_start)
         yield scrapy.Request(url_start, callback=self.parse_threads)
         
 
     def parse_threads(self, response):
-        print(response)
         threads = response.xpath('//tr[contains(@class, "dps_row")]')
         for thread in threads:
             link = thread.xpath('.//td[contains(@class, "PhorumListRow title")]/a/@href').get()
             url = response.urljoin(link)
-            print(url)
             yield scrapy.Request(url, callback=self.scrape_thread)
 
         yield from self.parse_threads_next_page(response)
@@ -68,6 +64,7 @@ class HevostalliSpider(scrapy.Spider):
             parsed_date = datetime.strptime(pre_time, "%d.%m.%y %H:%M:%S")
             iso_date = parsed_date.strftime("%Y-%m-%dT%H:%M:%S")
             post["timestamp"] = iso_date
+
             yield post
 
 
@@ -84,10 +81,6 @@ class HevostalliSpider(scrapy.Spider):
         filename_date_string = dt.strftime("%Y-%m-%d_%H-%M-%S")
         filename = f'scrapedcontent/kaksplus.fi_{filename_date_string}_{argstr}'
         return filename
-
-    # Make filename and save data after spider is done
-    def closed(self, reason):
-        pass
 
 
 

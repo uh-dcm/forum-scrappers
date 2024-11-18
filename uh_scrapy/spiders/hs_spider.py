@@ -75,7 +75,7 @@ class HSSpider(scrapy.Spider):
         argstr = '_'.join(self.filename.values())
         dt = datetime.now()
         filename_date_string = dt.strftime("%Y-%m-%d_%H-%M-%S")
-        filename = f'scrapedcontent/hs.fi_{filename_date_string}_{argstr}'
+        filename = f'scrapedcontent/hs_{filename_date_string}_{argstr}.csv'
         return filename
 
     # Function to save scraped data to csv

@@ -1,5 +1,6 @@
 from typing import Iterable
 import scrapy
+import logging
 
 class TestSpider(scrapy.Spider):
     name = "test"
@@ -13,11 +14,15 @@ class TestSpider(scrapy.Spider):
     def __init__(self, *args, **kwargs):
         super(TestSpider, self).__init__(*args, **kwargs)
         self.logger.info("Spider initialized")
+        self.count = 0
 
     def parse(self, response):
-        print(f"Visited: {response.url}")
-        # Check if the page was fetched correctly
-        print(f"Response status: {response.status}")
-        # Extract and print the page title or other elements for confirmation
-        page_title = response.css('title::text').get()
-        print(f"Page Title: {page_title}")
+        url = response.xpath("//a[contains(@href, 'a=2')]/@href").get()
+        self.count +=1
+        if url is not None:
+             url = response.urljoin(url)
+             yield scrapy.Request(url, callback=self.parse)
+    def closed(self, reason):
+
+        print(self.count)
+

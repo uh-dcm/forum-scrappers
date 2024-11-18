@@ -95,7 +95,7 @@ class KauppalehtiSpider(scrapy.Spider):
         argstr = '_'.join(self.search)
         dt = datetime.now()
         filename_date_string = dt.strftime("%Y-%m-%d_%H-%M-%S")
-        filename = f'scrapedcontent/kauppalehti.fi_{filename_date_string}_{argstr}'
+        filename = f'scrapedcontent/kauppalehti_{filename_date_string}_{argstr}.csv'
         return filename
 
     # Function to save scraped data to csv
