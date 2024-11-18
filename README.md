@@ -1,6 +1,11 @@
-# forum-scrappers
-## How to run
-    Pull the repository
+# Description
+There are a lot of ready made tools for scraping comments from worldwide popular social media resources, but less so for more locally used communities. This is an application for scraping comment-data from Finnish resources with high user traffic. This application is mainly using Scrapy as its backend - a powerful tool for scraping and processing online content. For the frontend it is using Tkinter - a GUI library for Python.
+
+This tool is attempting to be as simple as possible to use. A simple installation and a simple UI that outputs data in a format ready to plug into an analytical tool like 4CAT.
+
+# Installation
+
+    Download repository
 
     Install requirements from requirements.txt by running
 
@@ -12,28 +17,20 @@
 
     Run uniwebscraper.py.
 
-## Issues/Tweaks
-### Ongoing
-## Ongoing tasks:
- - making scraper for ylilauta.org
- - Designing a scraper builder app
+# Use
+    It is my hope that the UI is self explanatory, but here is a workflow just in case:
 
-## Progress so far:
-- Kauppalehti spider is finished
-- custom timeperiods are supported for hs and yle and kaksplus
-- Rimplemeted hs in scrapy
-- Kaksplus scraper ready
-- Reimplemented yle in scrapy
-- Better GUI for useability
-- Wrote a scraper for hs.fi that uses their search to find articles and scrapes them for comments.
-- Wrapped yle scraper into class for ease of use and readability
+    1) Run uniwebscraper.py
 
-- Wrote a scraper for yle.fi that uses yle search system to find all articles relating to particular terms and scrape their comments if existing.
-- Wrote a web scraper for vauva.fi that allows for use of their search function(limited as it is). It can pull all the pages related to a specific search and create a dataset of posts, authors, parent threads and timestamps. Adding additional fields if necessary is easy.
-- Spent half the week reading documentation on various options for web scraping. For now, have settled on scrapy as it seems to be the most easily scaleable and provides good pre-made pipeline for crawling through and handling multiple pages.
+    2) In the window that opens you can choose the domain to scrape
 
+    3) After choosing the domain, additional scraping options will pop up.
 
+    4) Fill out the form and press "Start scraping"
 
+    5) The output will be saved to "/scrapedcontent" folder
 
+# Issues
+- Due to limitations of Scrapy it is currently necessary to close the window and restart the program to scrape again.
 
 
