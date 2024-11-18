@@ -4,6 +4,7 @@ from tkcalendar import DateEntry
 
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
+from datetime import datetime
 
 import constants
 
@@ -28,13 +29,6 @@ class ScraperApp:
         # Bind the selection event to dynamically show fields based on domain
         self.domain_combobox.bind("<<ComboboxSelected>>", self.display_fields)
 
-        # Create an input field for search parameters
-        self.search_label = tk.Label(root, text="Enter Search Query:")
-        self.search_label.pack(pady=10, padx=5)
-        
-        self.search_entry = tk.Entry(root, width=50)
-        self.search_entry.pack(pady=5, padx=5)
-        
         # Placeholder for additional fields
         self.additional_fields_frame = tk.Frame(root)
         self.additional_fields_frame.pack(pady=10,padx=5)
@@ -63,11 +57,20 @@ class ScraperApp:
             self.kaksplus_fields()
         elif domain == 'kauppalehti.fi':
             self.kauppalehti_fields()
+        elif domain == 'hevostalli.fi':
+            self.hevostalli_fields()
 
     def vauva_fields(self):
-        pass
+        self.search_label = tk.Label(self.additional_fields_frame, text="Enter Search Query:")
+        self.search_label.pack(pady=10, padx=5) 
+        self.search_entry = tk.Entry(self.additional_fields_frame, width=50)
+        self.search_entry.pack(pady=5, padx=5)
 
     def yle_fields(self):
+        self.search_label = tk.Label(self.additional_fields_frame, text="Enter Search Query:")
+        self.search_label.pack(pady=10, padx=5) 
+        self.search_entry = tk.Entry(self.additional_fields_frame, width=50)
+        self.search_entry.pack(pady=5, padx=5)
 
         self.category_label = tk.Label(self.additional_fields_frame, text="Category:")
         self.category_label.pack(pady=5, padx=5)
@@ -95,6 +98,10 @@ class ScraperApp:
 
 
     def hs_fields(self):
+        self.search_label = tk.Label(self.additional_fields_frame, text="Enter Search Query:")
+        self.search_label.pack(pady=10, padx=5) 
+        self.search_entry = tk.Entry(self.additional_fields_frame, width=50)
+        self.search_entry.pack(pady=5, padx=5)
 
         self.category_label = tk.Label(self.additional_fields_frame, text="Category:")
         self.category_label.pack(pady=5, padx=5)
@@ -126,6 +133,12 @@ class ScraperApp:
         self.max_threads_entry.pack(pady=5, padx=5)
 
     def kaksplus_fields(self):
+        self.search_label = tk.Label(self.additional_fields_frame, text="Enter Search Query:")
+        self.search_label.pack(pady=10, padx=5) 
+        self.search_entry = tk.Entry(self.additional_fields_frame, width=50)
+        self.search_entry.pack(pady=5, padx=5)
+
+
 
         # Create a checkbox for searching titles only
         self.title_only_var = tk.BooleanVar()
@@ -173,6 +186,10 @@ class ScraperApp:
 
 
     def kauppalehti_fields(self):
+        self.search_label = tk.Label(self.additional_fields_frame, text="Enter Search Query:")
+        self.search_label.pack(pady=10, padx=5) 
+        self.search_entry = tk.Entry(self.additional_fields_frame, width=50)
+        self.search_entry.pack(pady=5, padx=5)
 
         # Sender input (Lähettäjä)
         self.users_label = tk.Label(self.additional_fields_frame, text="Lähettäjä (Sender):")
@@ -234,6 +251,34 @@ class ScraperApp:
         )
         self.order_combobox.pack(pady=5, padx=5)
 
+    def hevostalli_fields(self):
+        self.search_label = tk.Label(self.additional_fields_frame, text="Enter Search Query:")
+        self.search_label.pack(pady=10, padx=5) 
+        self.search_entry = tk.Entry(self.additional_fields_frame, width=50)
+        self.search_entry.pack(pady=5, padx=5)
+
+        self.forum_label = tk.Label(self.additional_fields_frame, text="Category:")
+        self.forum_label.pack(pady=5, padx=5)
+        self.forum_var = tk.StringVar()
+        self.forum_combobox = ttk.Combobox(self.additional_fields_frame, textvariable=self.forum_var, values=[key for key in constants.HEVOSTALLI_FORUMS])
+        self.forum_combobox.pack(pady=5, padx=5)
+
+        self.time_label_from = tk.Label(self.additional_fields_frame, text="From:")
+        self.time_label_from.pack(pady=5, padx=5)
+        self.time_var_from = tk.StringVar()
+        self.time_entry_from = DateEntry(self.additional_fields_frame, textvariable=self.time_var_from, date_pattern="y-mm-dd")
+        self.time_entry_from.pack(pady=5)
+
+        self.time_label_to = tk.Label(self.additional_fields_frame, text="To:")
+        self.time_label_to.pack(pady=5)
+        self.time_var_to = tk.StringVar()
+        self.time_entry_to = DateEntry(self.additional_fields_frame, textvariable=self.time_var_to, date_pattern="y-mm-dd") 
+        self.time_entry_to.pack(pady=5)
+
+
+
+
+
     def start_scraper(self):
         # Get selected domain and search query
         domain = self.domain_var.get()
@@ -241,10 +286,12 @@ class ScraperApp:
 
         if domain and query:
             print(f"Starting scraper for domain: {domain} with search query: {query}")
-            process = CrawlerProcess(get_project_settings())
+            settings = get_project_settings()
+
             
             # Handling different domains based on user selection
             if domain == 'vauva.fi':
+                process = CrawlerProcess(settings)
                 process.crawl("vauva",  start_urls=[f'https://www.vauva.fi/haku?keys={query}&sort&searchpage'])
             elif domain == 'yle.fi':
                 category = self.category_var.get()
@@ -252,6 +299,7 @@ class ScraperApp:
                 timeTo = self.time_var_to.get()
                 language = self.language_var.get()
                 search = {"query" : query, "category" : category, "timeFrom" : timeFrom,"timeTo" : timeTo , "language" : language}
+                process = CrawlerProcess(settings)
                 process.crawl("yle", search)
             elif domain == 'hs.fi':
                 category = self.category_var.get()
@@ -260,6 +308,7 @@ class ScraperApp:
                 sorting = self.sorting_var.get()
                 max_threads = self.max_threads_entry.get()
                 search = {"query" : query, "category" : category, "timeFrom" : timeFrom, "timeTo": timeTo, "max_threads" : max_threads, "sort" : sorting}
+                process = CrawlerProcess(settings)
                 process.crawl("hs", search)
             elif domain == 'kaksplus.fi':
                 search = []
@@ -270,6 +319,7 @@ class ScraperApp:
                 search.append(str(constants.KAKSPLUS_FORUM_SECTIONS[self.nodes_entry_var.get()]))
                 search.append(str(self.child_nodes_var.get()))
                 search.append(str(self.order_var.get()))
+                process = CrawlerProcess(settings)
                 process.crawl('kaksplus', search)
             elif domain == 'kauppalehti.fi':
                 search = []
@@ -282,7 +332,29 @@ class ScraperApp:
                 search.append(str(self.nodes_entry_var.get()))
                 search.append(str(self.child_nodes_var.get()))
                 search.append(str(self.order_var.get()))
-                process.crawl('kauppalehti', search)    
+                process = CrawlerProcess(settings)
+                process.crawl('kauppalehti', search)
+            elif domain == 'hevostalli.fi':
+                forum = self.forum_var.get()
+                timeFrom = self.time_var_from.get()
+                timeTo = self.time_var_to.get()
+                search = {'forum': constants.HEVOSTALLI_FORUMS[forum], 'query':query}
+                name=self.make_filename(search)
+                custom_settings = {
+                    'QUERY' : query,
+                    'TIMEFROM': timeFrom,
+                    'TIMETO': timeTo,
+                    'ITEM_PIPELINES': {
+                        'uh_scrapy.pipelines.TimestampFilterPipeline': 1,
+                        'uh_scrapy.pipelines.BodyFilterPipeline': 2,
+                    },
+                }
+                settings['FEEDS'] = { name: {'format': 'csv', 'overwrite': True} }
+                settings.update(custom_settings)
+                process = CrawlerProcess(settings)
+                process.crawl('hevostalli', search)
+                
+               
 
 
             else:
@@ -292,6 +364,14 @@ class ScraperApp:
         else:
             print("Please select a domain and enter a search query.")
 
+   # Function to make an appropriate filename
+    def make_filename(self, search):
+        argstr = '_'.join(search)
+        dt = datetime.now()
+        filename_date_string = dt.strftime("%Y-%m-%d_%H-%M-%S")
+        filename = f'scrapedcontent/{self.domain_var.get()}_{filename_date_string}_{argstr}.csv'
+        return str(filename)
+    
 
 # Main method to run the GUI
 if __name__ == "__main__":
