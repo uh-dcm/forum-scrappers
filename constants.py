@@ -2,7 +2,7 @@
 # Storing them separately is intended to improve readability
 
 #UI_constants
-ALLOWED_DOMAINS = ['vauva.fi', 'yle.fi', 'hs.fi', 'kaksplus.fi', 'kauppalehti.fi']
+ALLOWED_DOMAINS = ['vauva.fi', 'yle.fi', 'hs.fi', 'kaksplus.fi', 'kauppalehti.fi', 'hevostalli.fi']
 
 #Vauva constants
 #Vauva parameters
