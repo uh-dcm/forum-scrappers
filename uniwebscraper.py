@@ -48,7 +48,7 @@ class ScraperApp:
         
         # Show additional fields based on the selected domain
         if domain == 'vauva.fi':
-            self.vauva_fields()
+            self.output = self.vauva_fields()
         elif domain == 'yle.fi':
             self.yle_fields()
         elif domain == 'hs.fi':
@@ -65,6 +65,19 @@ class ScraperApp:
         self.search_label.pack(pady=10, padx=5) 
         self.search_entry = tk.Entry(self.additional_fields_frame, width=50)
         self.search_entry.pack(pady=5, padx=5)
+
+        self.time_label_from = tk.Label(self.additional_fields_frame, text="From:")
+        self.time_label_from.pack(pady=5, padx=5)
+        self.time_var_from = tk.StringVar()
+        self.time_entry_from = DateEntry(self.additional_fields_frame, textvariable=self.time_var_from, date_pattern="y-mm-dd")
+        self.time_entry_from.pack(pady=5)
+
+        self.time_label_to = tk.Label(self.additional_fields_frame, text="To:")
+        self.time_label_to.pack(pady=5)
+        self.time_var_to = tk.StringVar()
+        self.time_entry_to = DateEntry(self.additional_fields_frame, textvariable=self.time_var_to, date_pattern="y-mm-dd") 
+        self.time_entry_to.pack(pady=5)
+
 
     def yle_fields(self):
         self.search_label = tk.Label(self.additional_fields_frame, text="Enter Search Query:")
@@ -177,12 +190,6 @@ class ScraperApp:
         self.order_var = tk.StringVar()
         self.order_combobox = ttk.Combobox(self.additional_fields_frame, textvariable=self.order_var, values=["relevance", "date", "replies"])
         self.order_combobox.pack(pady=5, padx=5)
-        '''
-        # Create a checkbox for grouping results
-        self.grouped_var = tk.BooleanVar(value=True)  # Default to checked
-        self.grouped_checkbox = tk.Checkbutton(self.additional_fields_frame, text="Show Results as Threads", variable=self.grouped_var)
-        self.grouped_checkbox.pack(pady=5)
-        '''
 
 
     def kauppalehti_fields(self):
@@ -277,8 +284,6 @@ class ScraperApp:
 
 
 
-
-
     def start_scraper(self):
         # Get selected domain and search query
         domain = self.domain_var.get()
@@ -291,8 +296,19 @@ class ScraperApp:
             
             # Handling different domains based on user selection
             if domain == 'vauva.fi':
+                custom_settings = {
+                    'QUERY' : query,
+                    'TIMEFROM': self.time_var_from.get(),
+                    'TIMETO': self.time_var_to.get(),
+                    'ITEM_PIPELINES': {
+                        'uh_scrapy.pipelines.TimestampFilterPipeline': 1,
+                    },
+                }
+                settings.update(custom_settings)
+                name = self.make_filename([settings["QUERY"],settings["TIMEFROM"], settings["TIMETO"]])
+                settings['FEEDS'] = { name: {'format': 'csv', 'overwrite': True} }
                 process = CrawlerProcess(settings)
-                process.crawl("vauva",  start_urls=[f'https://www.vauva.fi/haku?keys={query}&sort&searchpage'])
+                process.crawl("vauva")
             elif domain == 'yle.fi':
                 category = self.category_var.get()
                 timeFrom = self.time_var_from.get()
@@ -302,21 +318,26 @@ class ScraperApp:
                 process = CrawlerProcess(settings)
                 process.crawl("yle", search)
             elif domain == 'hs.fi':
-                category = self.category_var.get()
-                timeFrom = self.time_var_from.get()
-                timeTo = self.time_var_to.get()
-                sorting = self.sorting_var.get()
-                max_threads = self.max_threads_entry.get()
-                search = {"query" : query, "category" : category, "timeFrom" : timeFrom, "timeTo": timeTo, "max_threads" : max_threads, "sort" : sorting}
+                custom_settings = {
+                    'QUERY' : query,
+                    'TIMEFROM': self.time_var_from.get(),
+                    'TIMETO': self.time_var_to.get(),
+                    'HSCATEGORY': self.category_var.get(),
+                    'LIMIT': self.max_threads_entry.get(), 
+                    'SORTING': self.sorting_var.get()
+                }
+                settings.update(custom_settings)
+                name = self.make_filename([settings[value] for value in custom_settings])
+                settings['FEEDS'] = { name: {'format': 'csv', 'overwrite': True} }
                 process = CrawlerProcess(settings)
-                process.crawl("hs", search)
+                process.crawl("hs")
             elif domain == 'kaksplus.fi':
                 search = []
                 search.append(str(query))
                 search.append(str(self.title_only_var.get()))
                 search.append(str(self.newer_than_entry.get()))
                 search.append(str(self.min_reply_count_entry.get()))
-                search.append(str(constants.KAKSPLUS_FORUM_SECTIONS[self.nodes_entry_var.get()]))
+                search.append(str(self.nodes_entry_var.get()))
                 search.append(str(self.child_nodes_var.get()))
                 search.append(str(self.order_var.get()))
                 process = CrawlerProcess(settings)
@@ -338,21 +359,21 @@ class ScraperApp:
                 forum = self.forum_var.get()
                 timeFrom = self.time_var_from.get()
                 timeTo = self.time_var_to.get()
-                search = {'forum': constants.HEVOSTALLI_FORUMS[forum], 'query':query}
-                name=self.make_filename(search)
                 custom_settings = {
                     'QUERY' : query,
                     'TIMEFROM': timeFrom,
                     'TIMETO': timeTo,
+                    'FORUM': forum,
                     'ITEM_PIPELINES': {
                         'uh_scrapy.pipelines.TimestampFilterPipeline': 1,
                         'uh_scrapy.pipelines.BodyFilterPipeline': 2,
                     },
                 }
+                name = self.make_filename([settings[value] for value in custom_settings])
                 settings['FEEDS'] = { name: {'format': 'csv', 'overwrite': True} }
                 settings.update(custom_settings)
                 process = CrawlerProcess(settings)
-                process.crawl('hevostalli', search)
+                process.crawl('hevostalli')
                 
                
 
@@ -361,15 +382,16 @@ class ScraperApp:
                 print("Domain not supported yet.")
             
             process.start()
+            self.root.destroy()
         else:
             print("Please select a domain and enter a search query.")
 
    # Function to make an appropriate filename
-    def make_filename(self, search):
-        argstr = '_'.join(search)
+    def make_filename(self, formdata):
+        argstr = '_'.join(formdata)
         dt = datetime.now()
         filename_date_string = dt.strftime("%Y-%m-%d_%H-%M-%S")
-        filename = f'scrapedcontent/{self.domain_var.get()}_{filename_date_string}_{argstr}.csv'
+        filename = f'scrapedcontent/{self.domain_var.get()}_on_{filename_date_string}_searchdata_{argstr}.csv'
         return str(filename)
     
 
