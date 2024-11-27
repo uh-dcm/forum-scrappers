@@ -3,6 +3,7 @@ import scrapy
 from pathlib import Path
 import pandas as pd
 from scrapy.http import FormRequest
+import configparser
 
 items = []
 class KaksplusSpider(scrapy.Spider):
@@ -25,6 +26,8 @@ class KaksplusSpider(scrapy.Spider):
         super(KaksplusSpider, self).__init__(*args, **kwargs)
         self.search = search
         self.items = []
+        self.config = configparser.ConfigParser()
+        self.config.read('config.ini')
 
     
     def parse(self, response):
@@ -35,7 +38,7 @@ class KaksplusSpider(scrapy.Spider):
             "c[title_only]": '1' if self.search[1] else '0',  
             "c[newer_than]": self.search[2],  
             "c[min_reply_count]": self.search[3],  
-            "c[nodes][]": self.search[4],  
+            "c[nodes][]": self.config['KAKSPLUS_FORUM_SECTIONS'][self.search[4]],  
             "c[child_nodes]": '1' if self.search[5] else '0',  
             "order": self.search[6],  
             "grouped": '1',    

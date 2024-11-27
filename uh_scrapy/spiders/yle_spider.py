@@ -4,6 +4,7 @@ import scrapy
 from pathlib import Path
 import pandas as pd
 import constants
+import configparser
 
 
 class YleSpider(scrapy.Spider):
@@ -11,12 +12,14 @@ class YleSpider(scrapy.Spider):
     
     def __init__(self, search, *args, **kwargs):
         super(YleSpider, self).__init__(*args, **kwargs)
+        self.config = configparser.ConfigParser()
+        self.config.read('config.ini')
         self.filename = search
         query = "query=" + search["query"].replace(" ", "%20")
-        category = constants.YLE_CATEGORIES[search["category"]]
+        category = self.config["YLE_CATEGORIES"][search["category"]]
         timeFrom = "timeFrom=" + search["timeFrom"]
         timeTo = "timeTo=" + search["timeTo"]
-        language = constants.YLE_LANGUAGE[search["language"]]
+        language = self.config["YLE_LANGUAGE"][search["language"]]
         self.search = [query, category, timeFrom, timeTo , language]
 
         self.count = 50

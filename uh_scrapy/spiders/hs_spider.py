@@ -5,26 +5,28 @@ from pathlib import Path
 import pandas as pd
 import constants
 import time
+from ..items import PostItem
+import configparser
 
 
 class HSSpider(scrapy.Spider):
     name= 'hs'
+    start_urls = ["https://www.hs.fi"]
     
-    def __init__(self, search, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(HSSpider, self).__init__(*args, **kwargs)
-        self.filename = search
-        query = search["query"].replace(" ", "%20")
-        category = constants.HS_CATEGORIES[search["category"]]
-        timeFrom = self.convert_to_epoch_ms(search["timeFrom"])
-        timeTo = self.convert_to_epoch_ms(search["timeTo"])
-        sort = constants.HS_SORTING[search["sort"]]
-        self.search = [query, category, timeFrom, timeTo, sort]
+        self.query = ''
+        self.category = ''
+        self.timefrom = ''
+        self.timeto = ''
+        self.sort = ''
 
         self.count = 50
         self.offset = 0
-        self.limit = int(search['max_threads'])
-
-        self.comments = []
+        self.limit = 0
+        
+        self.config = configparser.ConfigParser()
+        self.config.read('config.ini')
 
     #convert date string to epoch time
     def convert_to_epoch_ms(self, date_string):
@@ -40,35 +42,57 @@ class HSSpider(scrapy.Spider):
 
     #Function to turn the search parameters into a valid url 
     def query_to_url(self, count, offset):
-        APIurl = f'https://www.hs.fi/api/search/{self.search[0]}/{self.search[1]}/custom/{self.search[4]}/{offset}/{count}/{self.search[2]}/{self.search[3]}/keyword'
+        APIurl = f'https://www.hs.fi/api/search/{self.query}/{self.category}/custom/{self.sort}/{offset}/{count}/{self.timefrom}/{self.timeto}/keyword'
         return APIurl  
 
     #initial request
-    def start_requests(self):
+    def parse(self, response):
+
+        self.query = self.settings["QUERY"].replace(" ", "%20")
+        self.category = self.config["HS_CATEGORIES"][self.settings["HSCATEGORY"]]
+        self.timefrom = self.convert_to_epoch_ms(self.settings["TIMEFROM"])
+        self.timeto = self.convert_to_epoch_ms(self.settings["TIMETO"])
+        self.limit = int(self.settings["LIMIT"])
+        self.sort = self.config["HS_SORTING"][self.settings["SORTING"]]
+        
         url = self.query_to_url(self.count, self.offset)
-        return [scrapy.Request(url, callback=self.parse)] 
+        yield scrapy.Request(url, callback=self.parse_threads)
     
  
     
     # Function to collect thread ids
-    def parse(self, response):
+    def parse_threads(self, response):
         
         data = response.json()
         if data != []:
             for id in [entry['id'] for entry in data]:
                 url = f"https://www.hs.fi/api/commenting/hs/articles/{id}/comments"
                 yield scrapy.Request(url, callback=self.scrape_thread)
-
         
-            if self.limit==0 or self.offset+self.count<self.limit:
-                self.offset = self.offset + self.count
-                APIurl = self.query_to_url(self.count, self.offset)
-                yield scrapy.Request(APIurl, callback=self.parse)
+        yield from self.parse_threads_next_page(response)
+
+    def parse_threads_next_page(self, response):
+        if self.limit==0 or self.offset+self.count<self.limit:
+            self.offset = self.offset + self.count
+            APIurl = self.query_to_url(self.count, self.offset)
+            yield scrapy.Request(APIurl, callback=self.parse_threads)
 
     # Function to scrape comments from thread
     def scrape_thread(self, response):
         data = response.json()
-        self.comments.extend(data['comments'])
+        if data["totalComments"] != 0:
+            for comment in data['comments']:
+                post = PostItem()
+                post['id'] = comment["id"]
+                post["thread"] = comment["articleId"]
+                post["author"] = comment["userIdentity"]["displayName"]
+                post["body"] = comment["comment"]
+                post["timestamp"] = datetime.fromtimestamp(comment['createdAt'] / 1000).strftime("%Y-%m-%dT%H:%M:%S")
+                yield post
+
+
+    def scrape_next_thread(self, response):
+        pass
 
     # Function to make an appropriate filename
     def make_filename(self):
@@ -94,7 +118,8 @@ class HSSpider(scrapy.Spider):
 
     # Make filename and save data after spider is done
     def closed(self, reason):
-        name = self.make_filename()
-        self.to_4cat_csv(self.comments, name)
+        pass
+        # name = self.make_filename()
+        # self.to_4cat_csv(self.comments, name)
 
         

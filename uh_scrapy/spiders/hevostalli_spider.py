@@ -4,6 +4,7 @@ from pathlib import Path
 import pandas as pd
 from scrapy.http import FormRequest
 from ..items import PostItem
+import configparser
 
 class HevostalliSpider(scrapy.Spider):
 
@@ -15,15 +16,18 @@ class HevostalliSpider(scrapy.Spider):
         'ROBOTSTXT_OBEY': False,  # Temporarily disable robots.txt obeying
     }
 
-    def __init__(self, formdata, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(HevostalliSpider, self).__init__(*args, **kwargs)
-        self.formdata = formdata
+        self.formdata = []
         self.items = []
+        self.config = configparser.ConfigParser()
+        self.config.read('config.ini')
 
     
     def parse(self, response):
-        form = self.formdata
-        url_start  = f'http://forum.hevostalli.net/list.php?f={form["forum"]}'
+        forum = self.settings["FORUM"]
+        forum = self.config[forum]
+        url_start  = f'http://forum.hevostalli.net/list.php?f={forum}'
         yield scrapy.Request(url_start, callback=self.parse_threads)
         
 

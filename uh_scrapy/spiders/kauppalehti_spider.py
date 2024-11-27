@@ -4,6 +4,7 @@ from pathlib import Path
 import pandas as pd
 from scrapy.http import FormRequest
 import logging
+import configparser
 
 class KauppalehtiSpider(scrapy.Spider):
 
@@ -15,6 +16,8 @@ class KauppalehtiSpider(scrapy.Spider):
         logging.getLogger('scrapy').setLevel(logging.WARNING)
         self.search = search
         self.items = []
+        self.config = configparser.ConfigParser()
+        self.config.read('config.ini')
 
     
     def parse(self, response):
@@ -30,7 +33,7 @@ class KauppalehtiSpider(scrapy.Spider):
             'c[newer_than]': self.search[3],
             'c[older_than]': self.search[4],
             'c[min_reply_count]': self.search[5],
-            'c[nodes][]':self.search[6],
+            'c[nodes][]':self.config['KAUPPALEHTI_FORUM_SECTIONS'][self.search[6]],
             'c[child_nodes]':self.search[7],
             'order': self.search[8],
             'grouped': '1',
