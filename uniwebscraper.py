@@ -7,12 +7,15 @@ from scrapy.utils.project import get_project_settings
 from datetime import datetime
 
 import constants
+import configparser
 
 
 
 class ScraperApp:
     
     def __init__(self, root):
+        self.config = configparser.ConfigParser()
+        self.config.read('config.ini')
         self.root = root
         self.root.title("Web Scraper UI")
         #self.root.geometry("500x600")
@@ -88,7 +91,7 @@ class ScraperApp:
         self.category_label = tk.Label(self.additional_fields_frame, text="Category:")
         self.category_label.pack(pady=5, padx=5)
         self.category_var = tk.StringVar()
-        self.category_combobox = ttk.Combobox(self.additional_fields_frame, textvariable=self.category_var, values=[key for key in constants.YLE_CATEGORIES])
+        self.category_combobox = ttk.Combobox(self.additional_fields_frame, textvariable=self.category_var, values=[key for key in self.config['YLE_CATEGORIES']])
         self.category_combobox.pack(pady=5, padx=5)
 
         self.time_label_from = tk.Label(self.additional_fields_frame, text="From:")
@@ -106,7 +109,7 @@ class ScraperApp:
         self.language_label = tk.Label(self.additional_fields_frame, text="Language:")
         self.language_label.pack(pady=5)
         self.language_var = tk.StringVar()
-        self.language_combobox = ttk.Combobox(self.additional_fields_frame, textvariable=self.language_var, values=[key for key in constants.YLE_LANGUAGE])
+        self.language_combobox = ttk.Combobox(self.additional_fields_frame, textvariable=self.language_var, values=[key for key in self.config['YLE_LANGUAGE']])
         self.language_combobox.pack(pady=5, padx=5)
 
 
@@ -176,7 +179,7 @@ class ScraperApp:
         self.nodes_label = tk.Label(self.additional_fields_frame, text="Forum Sections (comma-separated IDs):")
         self.nodes_label.pack(pady=5, padx=5)
         self.nodes_entry_var = tk.StringVar()
-        self.nodes_entry = ttk.Combobox(self.additional_fields_frame, textvariable=self.nodes_entry_var, values = [value for value in constants.KAKSPLUS_FORUM_SECTIONS])
+        self.nodes_entry = ttk.Combobox(self.additional_fields_frame, textvariable=self.nodes_entry_var, values = [key for key in self.config['KAKSPLUS_FORUM_SECTIONS'].keys()])
         self.nodes_entry.pack(pady=5, padx=5)
 
         # Create a checkbox for including child nodes
@@ -197,12 +200,6 @@ class ScraperApp:
         self.search_label.pack(pady=10, padx=5) 
         self.search_entry = tk.Entry(self.additional_fields_frame, width=50)
         self.search_entry.pack(pady=5, padx=5)
-
-        # Sender input (Lähettäjä)
-        self.users_label = tk.Label(self.additional_fields_frame, text="Lähettäjä (Sender):")
-        self.users_label.pack(pady=5, padx=5)
-        self.users_entry = tk.Entry(self.additional_fields_frame, width=50)
-        self.users_entry.pack(pady=5, padx=5)
 
         #Title only
         self.title_only_var = tk.BooleanVar(value=False)
@@ -236,7 +233,7 @@ class ScraperApp:
         self.nodes_entry = ttk.Combobox(
             self.additional_fields_frame,
             textvariable=self.nodes_entry_var,
-            values=[value for value in constants.KAUPPALEHTI_FORUM_SECTIONS],
+            values=[key for key in self.config['KAUPPALEHTI_FORUM_SECTIONS'].keys()],
             width=50
         )
         self.nodes_entry.pack(pady=5, padx=5)
@@ -310,14 +307,23 @@ class ScraperApp:
                 process = CrawlerProcess(settings)
                 process.crawl("vauva")
             elif domain == 'yle.fi':
-                category = self.category_var.get()
-                timeFrom = self.time_var_from.get()
-                timeTo = self.time_var_to.get()
-                language = self.language_var.get()
-                search = {"query" : query, "category" : category, "timeFrom" : timeFrom,"timeTo" : timeTo , "language" : language}
+
+                custom_settings = {
+                    'QUERY' : query,
+                    'CATEGORY': self.category_var.get(),
+                    'TIMEFROM': self.time_var_from.get(),
+                    'TIMETO': self.time_var_to.get(),
+                    'LANGUAGE': self.language_var.get(),
+
+                }
+                settings.update(custom_settings)
+                name = self.make_filename([settings["QUERY"],settings["TIMEFROM"], settings["TIMETO"]])
+                settings['FEEDS'] = { name: {'format': 'csv', 'overwrite': True} }
                 process = CrawlerProcess(settings)
-                process.crawl("yle", search)
+                process.crawl("yle")
+
             elif domain == 'hs.fi':
+
                 custom_settings = {
                     'QUERY' : query,
                     'TIMEFROM': self.time_var_from.get(),
@@ -332,29 +338,40 @@ class ScraperApp:
                 process = CrawlerProcess(settings)
                 process.crawl("hs")
             elif domain == 'kaksplus.fi':
-                search = []
-                search.append(str(query))
-                search.append(str(self.title_only_var.get()))
-                search.append(str(self.newer_than_entry.get()))
-                search.append(str(self.min_reply_count_entry.get()))
-                search.append(str(self.nodes_entry_var.get()))
-                search.append(str(self.child_nodes_var.get()))
-                search.append(str(self.order_var.get()))
+                custom_settings = {
+                    'QUERY' : str(query),
+                    'TITLEONLY' : str(self.title_only_var.get()),
+                    'TIMEFROM': str(self.newer_than_entry.get()),
+                    'MINREPLY': str(self.min_reply_count_entry.get()),
+                    'FORUMSECTION': str(self.nodes_entry_var.get()),
+                    'SUBSECTIONS': str(self.child_nodes_var.get()), 
+                    'SORTING': str(self.order_var.get()),
+                }
+
+                settings.update(custom_settings)
+                name = self.make_filename([settings["QUERY"], settings["TIMEFROM"]])
+                settings['FEEDS'] = { name: {'format': 'csv', 'overwrite': True} }
                 process = CrawlerProcess(settings)
-                process.crawl('kaksplus', search)
+                process.crawl("kaksplus")
+
             elif domain == 'kauppalehti.fi':
-                search = []
-                search.append(str(query))
-                search.append(str(self.title_only_var.get()))
-                search.append(str(self.users_entry.get()))
-                search.append(str(self.newer_than_var.get()))
-                search.append(str(self.older_than_var.get()))
-                search.append(str(self.min_reply_count_entry.get()))
-                search.append(str(self.nodes_entry_var.get()))
-                search.append(str(self.child_nodes_var.get()))
-                search.append(str(self.order_var.get()))
+                custom_settings = {
+                    'QUERY' : str(query),
+                    'TITLEONLY' : str(self.title_only_var.get()),
+                    'TIMEFROM': str(self.newer_than_entry.get()),
+                    'TIMETO' : str(self.older_than_var.get()),
+                    'MINREPLY': str(self.min_reply_count_entry.get()),
+                    'FORUMSECTION': str(self.nodes_entry_var.get()),
+                    'SUBSECTIONS': str(self.child_nodes_var.get()), 
+                    'SORTING': str(self.order_var.get()),
+                }
+
+                settings.update(custom_settings)
+                name = self.make_filename([settings["QUERY"],settings["TIMEFROM"], settings["TIMETO"]])
+                settings['FEEDS'] = { name: {'format': 'csv', 'overwrite': True} }
                 process = CrawlerProcess(settings)
-                process.crawl('kauppalehti', search)
+                process.crawl("kauppalehti")
+
             elif domain == 'hevostalli.fi':
                 forum = self.forum_var.get()
                 timeFrom = self.time_var_from.get()
