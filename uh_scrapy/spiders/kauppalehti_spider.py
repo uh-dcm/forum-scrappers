@@ -5,41 +5,45 @@ import pandas as pd
 from scrapy.http import FormRequest
 import logging
 import configparser
+from ..items import PostItem
 
 class KauppalehtiSpider(scrapy.Spider):
 
     name = "kauppalehti"
     start_urls = ['https://keskustelu.kauppalehti.fi/search/']
 
-    def __init__(self, search, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(KauppalehtiSpider, self).__init__(*args, **kwargs)
-        logging.getLogger('scrapy').setLevel(logging.WARNING)
-        self.search = search
-        self.items = []
         self.config = configparser.ConfigParser()
         self.config.read('config.ini')
 
     
     def parse(self, response):
-        print(response)
+        self.query = self.settings["QUERY"].replace(" ", "%20")
+        self.title_only = self.settings["TITLEONLY"]
+        self.newer_than = self.settings["TIMEFROM"]
+        self.older_than = self.settings["TIMETO"]
+        self.min_reply = self.settings["MINREPLY"]
+        self.forum_section = self.settings["FORUMSECTION"]
+        self.subsections = self.settings["SUBSECTIONS"]
+        self.sort = self.settings["SORTING"]
+
         _xfToken = response.css("input[name='_xfToken']::attr(value)").get()
         if not _xfToken:
             self.logger.error("Could not retrieve _xfToken")
             return
         formdata = {
-            'keywords': self.search[0],
-            'c[title_only]': self.search[1],
-            'c[users]': self.search[2],
-            'c[newer_than]': self.search[3],
-            'c[older_than]': self.search[4],
-            'c[min_reply_count]': self.search[5],
-            'c[nodes][]':self.config['KAUPPALEHTI_FORUM_SECTIONS'][self.search[6]],
-            'c[child_nodes]':self.search[7],
-            'order': self.search[8],
+            'keywords': self.query,
+            'c[title_only]': self.title_only,
+            'c[newer_than]': self.newer_than,
+            'c[older_than]': self.older_than,
+            'c[min_reply_count]': self.min_reply,
+            'c[nodes][]':self.config['KAUPPALEHTI_FORUM_SECTIONS'][self.forum_section],
+            'c[child_nodes]':self.subsections,
+            'order': self.sort,
             'grouped': '1',
             '_xfToken' : _xfToken,
         }
-        print(formdata)
         yield FormRequest(
             url='https://keskustelu.kauppalehti.fi/search/search',
             formdata=formdata,
@@ -72,15 +76,14 @@ class KauppalehtiSpider(scrapy.Spider):
     def scrape_thread(self, response):
         thread = response.xpath("//div[@class='p-title ']/h1/text()").get()
         for comment in response.xpath("//div[@class='message-inner']"):
+            post = PostItem()
             body = comment.xpath(".//article[@class='message-body js-selectToQuote']//div[@class='bbWrapper']//text()").getall()
-            row = {
-                "thread": thread,
-                "Author": comment.xpath(".//h4[@class='message-name']/a//text()").get(),
-                "body": ' '.join([text.strip() for text in body if text.strip()]),
-                "id": comment.xpath(".//a[contains(@class, 'message-attribution-gadget')]/@data-href").re_first(r'/posts/(\d+)/'),
-                "timestamp": comment.xpath(".//time[@class='u-dt']/@datetime").get()
-            }
-            self.items.append(row)
+            post["thread"] = thread
+            post["author"] = comment.xpath(".//h4[@class='message-name']/a//text()").get()
+            post["body"] = ' '.join([text.strip() for text in body if text.strip()])
+            post["id"] = comment.xpath(".//a[contains(@class, 'message-attribution-gadget')]/@data-href").re_first(r'/posts/(\d+)/')
+            post['timestamp'] = comment.xpath(".//time[@class='u-dt']/@datetime").get()
+            yield post
         yield from self.scrape_thread_next_page(response)
 
     #check if the next page exists
@@ -108,9 +111,7 @@ class KauppalehtiSpider(scrapy.Spider):
 
     # Make filename and save data after spider is done
     def closed(self, reason):
-        name = self.make_filename()
-        if self.items is not []:
-            self.to_4cat_csv(self.items, name)
+        pass
 
 
 

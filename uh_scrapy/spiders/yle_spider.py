@@ -5,28 +5,18 @@ from pathlib import Path
 import pandas as pd
 import constants
 import configparser
+from ..items import PostItem
 
 
 class YleSpider(scrapy.Spider):
     name= 'yle'
+    start_urls = ['https://yle.fi/']
     
-    def __init__(self, search, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(YleSpider, self).__init__(*args, **kwargs)
         self.config = configparser.ConfigParser()
         self.config.read('config.ini')
-        self.filename = search
-        query = "query=" + search["query"].replace(" ", "%20")
-        category = self.config["YLE_CATEGORIES"][search["category"]]
-        timeFrom = "timeFrom=" + search["timeFrom"]
-        timeTo = "timeTo=" + search["timeTo"]
-        language = self.config["YLE_LANGUAGE"][search["language"]]
-        self.search = [query, category, timeFrom, timeTo , language]
-
-        self.count = 50
-        self.offset = 0
-        self.limit = 100
-
-        self.comments = []
+        
 
     #Function to turn the search parameters into a valid url 
     def query_to_url(self, count, offset):
@@ -36,36 +26,62 @@ class YleSpider(scrapy.Spider):
         APIurl = f'https://yle-fi-search.api.yle.fi/v1/search?app_id={app_id}&app_key={app_key}&limit={count}&offset={offset}&type=article&{searchstr}&time=custom'
         return APIurl
 
-    #initial request
-    def start_requests(self):
-        url = self.query_to_url(self.count, self.offset)
-        return [scrapy.Request(url, callback=self.parse)] 
     
+    def parse(self, response):
+
+        query = "query=" + self.settings["QUERY"].replace(" ", "%20")
+        category = self.config["YLE_CATEGORIES"][self.settings["CATEGORY"]]
+        timeFrom = "timeFrom=" + self.settings["TIMEFROM"]
+        timeTo = "timeTo=" + self.settings["TIMETO"]
+        language = self.config["YLE_LANGUAGE"][self.settings["LANGUAGE"]]
+        self.search = [query, category, timeFrom, timeTo , language]
+
+        self.count = 50
+        self.offset = 0
+        self.limit = 100
+
+        self.comments = []
+
+        url = self.query_to_url(self.count, self.offset)
+        return scrapy.Request(url, callback=self.parse_threads)
  
     
     # Function to collect thread ids
-    def parse(self, response):
-        
+    def parse_threads(self, response):
+        print('parsing')
         data = response.json()
-        total_count = data['meta']['count'] 
-        if total_count != 0:
+        self.total_count = data['meta']['count'] 
+        if self.total_count != 0:
             for id in [entry['id'] for entry in data['data']]:
                 app_key = 'sfYZJtStqjcANSKMpSN5VIaIUwwcBB6D'
                 app_id = 'yle-comments-plugin'
                 url = f"https://comments.api.yle.fi/v1/topics/{id}/comments/accepted?app_id={app_id}&app_key={app_key}&parent_limit=100"
                 yield scrapy.Request(url, callback=self.scrape_thread)
+            
+        yield self.parse_threads_next_page(response)
 
-        
-        if self.offset+self.count<total_count:
+    def parse_threads_next_page(self,response):
+        if self.offset+self.count<self.total_count:
             self.offset = self.offset + self.count
             APIurl = self.query_to_url(self.count, self.offset)
-            yield scrapy.Request(APIurl, callback=self.parse)
+            yield scrapy.Request(APIurl, callback=self.parse_threads)
 
     # Function to scrape comments from thread
     def scrape_thread(self, response):
-        data = response.json()
+        data = response.json()    
         if 'notifications' not in data:
-            self.comments.extend(data)
+            for comment in data:
+                print(comment)
+                post = PostItem()
+                post['author'] = comment['author'] 
+                post['body'] = comment['content']
+                post['timestamp'] = comment['createdAt']
+                post['id'] = comment['id']
+                post['thread'] = comment['topicExternalId']
+                yield post
+    
+    def scrape_thread_next_page(self,response):
+        pass
 
     # Function to make an appropriate filename
     def make_filename(self):
@@ -88,7 +104,6 @@ class YleSpider(scrapy.Spider):
 
     # Make filename and save data after spider is done
     def closed(self, reason):
-        name = self.make_filename()
-        self.to_4cat_csv(self.comments, name)
+        pass
 
         
