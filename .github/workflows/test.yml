@@ -1,0 +1,35 @@
+name: Run Unit Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Create Virtual Environment
+      run: |
+        python -m pip install --upgrade pip
+        ./venv.sh create
+    
+    - name: Activate Virtual Environment
+      run: |
+        source venv.sh activate 
+
+    - name: Run tests
+      run: |
+        python -m unittest discover -s tests -p "*.py"
