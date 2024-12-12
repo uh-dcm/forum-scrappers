@@ -19,17 +19,16 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.x'
+        python-version: '3.13.0' 
 
-    - name: Create Virtual Environment
+    - name: Create and activate virtual environment
       run: |
-        python -m pip install --upgrade pip
-        ./venv.sh create
-    
-    - name: Activate Virtual Environment
-      run: |
-        source venv.sh activate 
+        python -m venv venv  # Create virtual environment
+        source venv/bin/activate  # Activate virtual environment
+        python -m pip install --upgrade pip  # Upgrade pip
+        pip install -r requirements.txt  # Install dependencies from requirements.txt
 
     - name: Run tests
       run: |
-        python -m unittest discover -s tests -p "*.py"
+        source venv/bin/activate  # Ensure the virtual environment is activated
+        python -m unittest discover -s tests -p "*.py"  # Run your tests
